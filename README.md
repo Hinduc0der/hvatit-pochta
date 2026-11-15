@@ -1,4 +1,4 @@
-# Почта (рабочее название)
+# Хватит.Почта
 
 Лёгкий Android-клиент для **Яндекс Почты** и **Mail.ru** без рекламы — с уведомлениями о новых письмах.
 
@@ -33,5 +33,5 @@ APK — `Pochta/app/build/outputs/apk/release/`. Без `signing/keystore.proper
 
 ---
 
-*A tiny ad-free Android client for Yandex Mail and Mail.ru built on their web versions (IMAP is now paid
+*Hvatit.Pochta ("Enough. Mail") — a tiny ad-free Android client for Yandex Mail and Mail.ru built on their web versions (IMAP is now paid
 for both), with new-mail notifications. Unofficial; not affiliated with Yandex or VK.*

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- фон иконки = цвет края картинки (branding/make_icons.py, FILL) -->
+    <color name="ic_launcher_bg">#13171A</color>
+    <!-- салатовый ореол конверта -->
+    <color name="accent">#6BD12B</color>
+</resources>

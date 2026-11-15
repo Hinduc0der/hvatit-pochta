@@ -93,7 +93,8 @@ object Checker {
         val pi = PendingIntent.getActivity(ctx, s.notifId, open, flags)
         @Suppress("DEPRECATION")
         val b = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(ctx, CHANNEL) else Notification.Builder(ctx)
-        val n = b.setSmallIcon(android.R.drawable.ic_dialog_email)
+        val n = b.setSmallIcon(R.drawable.ic_notify)
+            .setColor(0xFF6BD12B.toInt())   // R.color.accent; getColor(int) у Context — только с API 23
             .setContentTitle(if (added == 1) "$who: новое письмо" else "$who: новых писем — $added")
             .setContentText("Непрочитанных: $unread")
             .setNumber(unread)
