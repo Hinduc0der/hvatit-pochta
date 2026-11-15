@@ -45,7 +45,19 @@ object Checker {
             val r = Counter.fetch(s, snap.cookies[s], snap.ua)
             out[s] = r.boxes
             if (r.error != null) Log.w(ctx, "[$why] ${s.title}: ошибка — ${r.error}")
+            if (r.noAuth) {
+                // предупреждаем один раз и только если вход раньше работал (не в первый запуск)
+                if (st.wasLoggedIn(s) && !st.authWarned(s) && MainActivity.visibleTab != s) {
+                    notifyAuth(ctx, s)
+                    st.setAuthWarned(s)
+                }
+                continue
+            }
             val boxes = r.boxes ?: continue
+            if (!st.wasLoggedIn(s) || st.authWarned(s)) {
+                st.setLoggedIn(s)
+                (ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(tag(s, AUTH), s.notifId)
+            }
             st.setBoxes(s, st.boxes(s) + boxes.map { it.id })
             for (b in boxes) {
                 val key = "${s.key}|${b.id}"
@@ -105,6 +117,28 @@ object Checker {
     }
 
     private fun tag(s: Svc, id: String) = "${s.key}|$id"
+    private const val AUTH = "#auth"   // не адрес — с ящиком не совпадёт
+
+    /** «вход слетел»: сессию сбросили (смена пароля, «выйти везде», cookies истекли) — письма больше не проверяются */
+    fun notifyAuth(ctx: Context, s: Svc) {
+        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        channel(ctx, nm)
+        val open = Intent(ctx, MainActivity::class.java).putExtra(MainActivity.EXTRA_SVC, s.key)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 23) PendingIntent.FLAG_IMMUTABLE else 0)
+        val pi = PendingIntent.getActivity(ctx, s.notifId + 100, open, flags)
+        @Suppress("DEPRECATION")
+        val b = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(ctx, CHANNEL) else Notification.Builder(ctx)
+        val n = b.setSmallIcon(R.drawable.ic_notify)
+            .setColor(0xFF6BD12B.toInt())
+            .setContentTitle("${s.title}: войдите заново")
+            .setContentText("Вход в почту слетел — новые письма не проверяются. Нажмите, чтобы войти.")
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(tag(s, AUTH), s.notifId, n)
+        Log.w(ctx, "${s.title}: вход слетел — показано уведомление")
+    }
 
     /** снять уведомление одного ящика (id) или всех ящиков сервиса (id = null) */
     fun cancel(ctx: Context, s: Svc, id: String? = null) {

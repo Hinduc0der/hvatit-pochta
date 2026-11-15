@@ -18,6 +18,13 @@ class Store(ctx: Context) {
     fun boxes(s: Svc): Set<String> = p.getStringSet("boxes_${s.key}", emptySet())!!
     fun setBoxes(s: Svc, ids: Set<String>) = p.edit().putStringSet("boxes_${s.key}", ids).apply()
 
+    /** вход в сервис хоть раз работал (иначе «вход слетел» не с чего было бы слетать) */
+    fun wasLoggedIn(s: Svc): Boolean = p.getBoolean("auth_ok_${s.key}", false)
+    fun setLoggedIn(s: Svc) = p.edit().putBoolean("auth_ok_${s.key}", true).putBoolean("auth_warned_${s.key}", false).apply()
+    /** уведомление «войдите заново» уже показано — не повторять на каждой проверке */
+    fun authWarned(s: Svc): Boolean = p.getBoolean("auth_warned_${s.key}", false)
+    fun setAuthWarned(s: Svc) = p.edit().putBoolean("auth_warned_${s.key}", true).apply()
+
     fun notifyOn(s: Svc): Boolean = p.getBoolean("notify_${s.key}", true)
     fun setNotifyOn(s: Svc, on: Boolean) = p.edit().putBoolean("notify_${s.key}", on).apply()
 

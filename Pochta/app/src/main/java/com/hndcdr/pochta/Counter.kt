@@ -18,7 +18,10 @@ import java.net.URLEncoder
 object Counter {
     /** ящик: id — адрес (или "" если сервис его не сообщает) */
     class Box(val id: String, val unread: Int)
-    class Result(val boxes: List<Box>?, val error: String?)
+    /** noAuth — сервис прямо ответил «не выполнен вход» (сеть и прочие сбои сюда не попадают) */
+    class Result(val boxes: List<Box>?, val error: String?, val noAuth: Boolean = false)
+
+    private class NoAuth(msg: String) : Exception(msg)
 
     /** адрес, cookies которого нужны запросу (берутся из CookieManager на главном потоке) */
     fun cookieUrl(s: Svc) = when (s) {
@@ -28,12 +31,14 @@ object Counter {
     }
 
     fun fetch(s: Svc, cookies: String?, ua: String): Result {
-        if (cookies.isNullOrBlank()) return Result(null, "нет cookies — не выполнен вход")
+        if (cookies.isNullOrBlank()) return Result(null, "нет cookies — не выполнен вход", noAuth = true)
         return try {
             when (s) {
                 Svc.YANDEX -> yandex(cookies, ua)
                 Svc.MAILRU -> mailru(cookies, ua)
             }
+        } catch (e: NoAuth) {
+            Result(null, "вход слетел: ${e.message}", noAuth = true)
         } catch (e: Exception) {
             Result(null, "${e.javaClass.simpleName}: ${e.message}")
         }
@@ -48,6 +53,9 @@ object Counter {
         if (code != 200) return Result(null, "HTTP $code ${text.take(150)}")
         val m = JSONObject(text).optJSONArray("models")?.optJSONObject(0)
             ?: return Result(null, "нет models: ${text.take(150)}")
+        // без входа: 200 и {"status":"error","error":{"code":"AUTH_NO_AUTH"}} (проверено 15.11.2026)
+        val err = m.optJSONObject("error")?.optString("code").orEmpty()
+        if (err.startsWith("AUTH")) throw NoAuth(err)
         if (m.optString("status") != "ok") return Result(null, "status=${m.optString("status")} ${m.toString().take(150)}")
         val c = m.optJSONObject("data")?.optJSONObject("counters")
             ?: return Result(null, "нет counters: ${m.toString().take(150)}")
@@ -64,6 +72,8 @@ object Counter {
         )
         if (code != 200) throw IllegalStateException("HTTP $code ${text.take(150)}")
         val j = JSONObject(text)
+        // без входа: 200 и {"status":"noauth",...} (проверено 15.11.2026)
+        if (j.optString("status") == "noauth" && login == null) throw NoAuth("NaviData status=noauth")
         if (j.optString("status") != "ok") throw IllegalStateException("status=${j.optString("status")} — вероятно, выход из ящика")
         val d = j.optJSONObject("data") ?: throw IllegalStateException("нет data")
         val cnt = d.optString("mail_cnt", "")
