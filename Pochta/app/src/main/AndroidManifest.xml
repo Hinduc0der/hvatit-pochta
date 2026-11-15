@@ -17,8 +17,11 @@
         android:allowBackup="false"
         android:usesCleartextTraffic="false">
 
+        <!-- подпись под иконкой — короткая (длинное «Хватит.Почта» не влезало и переезжало);
+             в настройках/списке приложений остаётся имя приложения выше -->
         <activity
             android:name=".MainActivity"
+            android:label="ЯКП"
             android:exported="true"
             android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|uiMode"
