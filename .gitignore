@@ -1,0 +1,21 @@
+# сборка
+Pochta/.gradle/
+Pochta/build/
+Pochta/app/build/
+Pochta/.kotlin/
+Pochta/local.properties
+.idea/
+*.iml
+
+# готовые APK — большие бинарники, лежат в releases/ и по тегам воспроизводятся сборкой
+releases/
+*.apk
+*.aab
+
+# ключ подписи — только вне git (копию держать отдельно!)
+signing/
+*.jks
+keystore.properties
+
+# скриншоты отладки с личной почтой — не публиковать
+scratch/
